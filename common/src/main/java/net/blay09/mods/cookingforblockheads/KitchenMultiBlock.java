@@ -27,6 +27,7 @@ import java.util.Set;
 public class KitchenMultiBlock implements IKitchenMultiBlock {
 
     private final static List<Block> blockConnectors = new ArrayList<>();
+    private final static Set<Block> jsonBlockConnectors = Sets.newHashSet();
 
     private final Set<BlockPos> checkedPos = Sets.newHashSet();
     private final List<IKitchenItemProvider> itemProviderList = Lists.newArrayList();
@@ -64,13 +65,25 @@ public class KitchenMultiBlock implements IKitchenMultiBlock {
                         }
                     } else {
                         BlockState state = level.getBlockState(position);
-                        if (!state.isAir() && blockConnectors.contains(state.getBlock())) {
+                        if (!state.isAir() && isConnectorBlock(state.getBlock())) {
                             findNeighbourKitchenBlocks(level, position, false);
                         }
                     }
                 }
             }
         }
+    }
+
+    private static boolean isConnectorBlock(final Block block) {
+        return blockConnectors.contains(block) || jsonBlockConnectors.contains(block);
+    }
+
+    public static void clearJsonConnectorBlocks() {
+        jsonBlockConnectors.clear();
+    }
+
+    public static void registerJsonConnectorBlock(final Block block) {
+        jsonBlockConnectors.add(block);
     }
 
     public static void registerConnectorBlock(final Block block) {

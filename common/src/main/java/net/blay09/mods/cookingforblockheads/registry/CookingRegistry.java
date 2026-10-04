@@ -170,6 +170,18 @@ public class CookingRegistry {
         return foodItems.get(outputItem);
     }
 
+    /** Removes only the stack objects created by the previous JSON compatibility reload. */
+    public static void removeJsonCompatItems(Collection<ItemStack> items) {
+        Set<ItemStack> owned = Collections.newSetFromMap(new IdentityHashMap<>());
+        owned.addAll(items);
+        tools.removeIf(owned::contains);
+        waterItems.removeIf(owned::contains);
+        milkItems.removeIf(owned::contains);
+        ovenFuelItems.keySet().removeIf(owned::contains);
+        ovenRecipes.keySet().removeIf(owned::contains);
+        toastHandlers.keySet().removeIf(owned::contains);
+    }
+
     public static void addToolItem(ItemStack toolItem) {
         tools.add(toolItem);
     }

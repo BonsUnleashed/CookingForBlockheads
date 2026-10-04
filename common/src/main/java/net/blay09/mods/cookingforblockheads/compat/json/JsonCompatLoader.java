@@ -5,6 +5,7 @@ import com.google.gson.GsonBuilder;
 import net.blay09.mods.balm.api.Balm;
 import net.blay09.mods.cookingforblockheads.CookingForBlockheads;
 import net.blay09.mods.cookingforblockheads.KitchenMultiBlock;
+import net.blay09.mods.cookingforblockheads.registry.CookingRegistry;
 import net.blay09.mods.cookingforblockheads.api.CookingForBlockheadsAPI;
 import net.blay09.mods.cookingforblockheads.api.event.FoodRegistryInitEvent;
 import net.blay09.mods.cookingforblockheads.block.ModBlocks;
@@ -34,6 +35,7 @@ public class JsonCompatLoader implements ResourceManagerReloadListener {
     public static final NonNullList<ItemStack> nonFoodRecipes = NonNullList.create();
     public static final Set<ResourceLocation> kitchenItemProviders = new HashSet<>();
     public static final Set<ResourceLocation> kitchenConnectors = new HashSet<>();
+    private static final List<ItemStack> loadedStacks = new ArrayList<>();
 
     static {
         Balm.getEvents().onEvent(FoodRegistryInitEvent.class, JsonCompatLoader::onCookingRegistry);
@@ -41,6 +43,12 @@ public class JsonCompatLoader implements ResourceManagerReloadListener {
 
     @Override
     public void onResourceManagerReload(ResourceManager resourceManager) {
+        CookingRegistry.removeJsonCompatItems(loadedStacks);
+        loadedStacks.clear();
+        KitchenMultiBlock.clearJsonConnectorBlocks();
+        nonFoodRecipes.clear();
+        kitchenItemProviders.clear();
+        kitchenConnectors.clear();
         try {
             for (Map.Entry<ResourceLocation, Resource> entry : COMPAT_FILES.listMatchingResources(resourceManager).entrySet()) {
                 try (BufferedReader reader = entry.getValue().openAsReader()) {
@@ -128,7 +136,7 @@ public class JsonCompatLoader implements ResourceManagerReloadListener {
 
                 Block connectorBlock = Balm.getRegistries().getBlock(kitchenConnector);
                 if (connectorBlock != null && connectorBlock != Blocks.AIR) {
-                    KitchenMultiBlock.registerConnectorBlock(connectorBlock);
+                    KitchenMultiBlock.registerJsonConnectorBlock(connectorBlock);
                 }
             }
         }
@@ -136,7 +144,12 @@ public class JsonCompatLoader implements ResourceManagerReloadListener {
 
     private static Optional<ItemStack> findItemStack(ResourceLocation registryName) {
         Item item = Balm.getRegistries().getItem(registryName);
-        return item == null || item == Items.AIR ? Optional.empty() : Optional.of(new ItemStack(item));
+        if (item == null || item == Items.AIR) {
+            return Optional.empty();
+        }
+        ItemStack stack = new ItemStack(item);
+        loadedStacks.add(stack);
+        return Optional.of(stack);
     }
 
 }
